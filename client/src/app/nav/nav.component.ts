@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms'
 import { AccountService } from '../_services/account.service';
-import { NgIf } from '@angular/common';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 
 @Component({
@@ -20,7 +19,7 @@ export class NavComponent {
       next: response => {
         console.log(response);
       },
-      error: error => console.log(error)
+      error: error => console.log(error),
     })
   }
 
