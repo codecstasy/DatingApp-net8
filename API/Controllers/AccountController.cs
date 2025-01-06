@@ -1,3 +1,4 @@
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using API.Data;
@@ -9,8 +10,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
-public class AccountController(DataContext context, ITokenService tokenService) : BaseApiController {
+public class AccountController : BaseApiController {
 
+    private DataContext _dataContext;
+    private ITokenService _tokenService;
+    public AccountController(DataContext context, ITokenService tokenService)
+    {
+        this._dataContext = context;
+        this._tokenService = tokenService;
+        
+    }
     [HttpPost("register")]  // account/register
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto) {
         if(await UserExists(registerDto.Username)) return BadRequest("Username is taken");
@@ -21,18 +30,18 @@ public class AccountController(DataContext context, ITokenService tokenService) 
             PasswordSalt = hmac.Key
         };
 
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
+        _dataContext.Users.Add(user);
+        await _dataContext.SaveChangesAsync();
 
         return new UserDto {
             Username = user.UserName,
-            Token = tokenService.CreateToken(user)
+            Token = _tokenService.CreateToken(user)
         };
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto loginDto) {
-        var user = await context.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
+        var user = await _dataContext.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
     
         if(user == null) return Unauthorized("Invalid username");
 
@@ -46,12 +55,12 @@ public class AccountController(DataContext context, ITokenService tokenService) 
         
         return new UserDto {
             Username = user.UserName,
-            Token = tokenService.CreateToken(user)
+            Token = _tokenService.CreateToken(user)
         };
     }
 
     private async Task<bool> UserExists(string username) {
-        return await context.Users.AnyAsync(x => x.UserName.ToLower() == username.ToLower());
+        return await _dataContext.Users.AnyAsync(x => x.UserName.ToLower() == username.ToLower());
     }
 }
 
